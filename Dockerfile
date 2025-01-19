@@ -19,5 +19,6 @@ COPY 	--from=builder /usr/sbin/yay /usr/sbin/yay
 
 RUN	yay -Syu --noconfirm sudo yq which \
 	&& curl -s https://raw.githubusercontent.com/caiodelgadonew/ansible-archlinux/refs/heads/main/roles/archlinux/vars/main.yml | yq '.yay_packages[]' | xargs yay -S --noconfirm \
-	&& yay -S --noconfirm consul nomad terraform vault
-
+	&& yay -S --noconfirm consul nomad terraform vault \
+	&& pacman -Sc --noconfirm \
+	&& rm -rf /var/cache/pacman/pkg/* /tmp/*
