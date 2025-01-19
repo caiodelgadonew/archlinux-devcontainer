@@ -16,14 +16,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set Build Metadata
+        id: metadata
+        run: |
+          echo "REPO_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
+          echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
+          echo "VERSION=dev" >> $GITHUB_ENV
+          echo "GIT_COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:dev .
+        run: |
+          docker build \
+            --build-arg REPO_OWNER=${{ env.REPO_OWNER }} \
+            --build-arg REPO_NAME=${{ env.REPO_NAME }} \
+            --build-arg VERSION=${{ env.VERSION }} \
+            --build-arg GIT_COMMIT_SHA=${{ env.GIT_COMMIT_SHA }} \
+            --build-arg BUILD_DATE=${{ env.BUILD_DATE }} \
+            -t ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:dev .
 
       - name: Push Docker Image
-        run: docker push ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:dev
+        run: docker push ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:dev
 
   build-release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -33,16 +49,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set Build Metadata
+        id: metadata
+        run: |
+          echo "REPO_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
+          echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
+          echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "GIT_COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker Image (Release)
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.ref_name }} .
+        run: |
+          docker build \
+            --build-arg REPO_OWNER=${{ env.REPO_OWNER }} \
+            --build-arg REPO_NAME=${{ env.REPO_NAME }} \
+            --build-arg VERSION=${{ env.VERSION }} \
+            --build-arg GIT_COMMIT_SHA=${{ env.GIT_COMMIT_SHA }} \
+            --build-arg BUILD_DATE=${{ env.BUILD_DATE }} \
+            -t ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:${{ env.VERSION }} .
 
       - name: Tag Docker Image as Latest
-        run: docker tag ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.ref_name }} ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+        run: docker tag ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:${{ env.VERSION }} ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:latest
 
       - name: Push Docker Images
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.ref_name }}
-          docker push ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+          docker push ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:${{ env.VERSION }}
+          docker push ghcr.io/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}:latest

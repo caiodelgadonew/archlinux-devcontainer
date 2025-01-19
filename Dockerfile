@@ -15,6 +15,23 @@ RUN	git clone https://aur.archlinux.org/yay.git /tmp/yay \
 
 FROM	archlinux:latest
 
+ARG	REPO_OWNER
+ARG	REPO_NAME
+ARG	VERSION
+ARG	GIT_COMMIT_SHA
+ARG	BUILD_DATE
+
+LABEL org.opencontainers.image.title="Arch Linux Development Container"
+LABEL org.opencontainers.image.description="Archlinux Dev Container with AUR Support"
+LABEL org.opencontainers.image.authors="Caio Delgado <github.com/caiodelgadonew> (@caiodelgadonew)"
+LABEL org.opencontainers.image.url="https://github.com/${REPO_OWNER}/${REPO_NAME}"
+LABEL org.opencontainers.image.documentation="https://github.com/${REPO_OWNER}/${REPO_NAME}#readme"
+LABEL org.opencontainers.image.source="https://github.com/${REPO_OWNER}/${REPO_NAME}"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.revision="${GIT_COMMIT_SHA}"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+
 COPY 	--from=builder /usr/sbin/yay /usr/sbin/yay
 
 RUN	yay -Syu --noconfirm sudo yq which \
