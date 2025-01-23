@@ -34,8 +34,11 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}"
 
 COPY 	--from=builder /usr/sbin/yay /usr/sbin/yay
 
-RUN	yay -Syu --noconfirm sudo yq which \
+RUN	yay -Syu --noconfirm sudo yq which unzip \
 	&& curl -s https://raw.githubusercontent.com/caiodelgadonew/ansible-archlinux/refs/heads/main/roles/archlinux/vars/main.yml | yq '.yay_packages[]' | xargs yay -S --noconfirm \
-	&& yay -S --noconfirm consul nomad terraform vault \
+	&& yay -S --noconfirm consul nomad vault \
+	&& git clone https://github.com/tfutils/tfenv.git /opt/tfenv \
+	&& ln -s /opt/tfenv/bin/* /usr/local/bin \
 	&& pacman -Sc --noconfirm \
 	&& rm -rf /var/cache/pacman/pkg/* /tmp/*
+
